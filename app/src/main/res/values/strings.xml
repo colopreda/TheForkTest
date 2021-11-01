@@ -7,7 +7,7 @@
     <string name="description">Description</string>
     <string name="location">Location</string>
     <string name="address">Address</string>
-    <string name="best_of_the_menu">Best of the menu</string>
+    <string name="menu">Menu</string>
     <string name="starters">Starters</string>
     <string name="mains">Mains</string>
     <string name="desserts">Desserts</string>

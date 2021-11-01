@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetRestaurantUseCase @Inject constructor(
     private val theForkAPI: TheForkAPI
 ) {
-    suspend operator fun invoke(): RestaurantModels {
-        return theForkAPI.getRestaurantData()
+    suspend operator fun invoke(): Restaurant {
+        return theForkAPI.getRestaurantData().data.toRestaurant()
     }
 }

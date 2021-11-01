@@ -1,14 +1,18 @@
 package com.colopreda.theforktest.presentation.restaurantpage
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import com.colopreda.theforktest.R
-import com.colopreda.theforktest.data.RestaurantModels
+import com.colopreda.theforktest.domain.Restaurant
 import com.colopreda.theforktest.presentation.State
+import com.colopreda.theforktest.utils.toFormattedEuro
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,26 +21,20 @@ import kotlinx.android.synthetic.main.activity_main.actual_rating_tv
 import kotlinx.android.synthetic.main.activity_main.address_line_1_tv
 import kotlinx.android.synthetic.main.activity_main.address_line_2_tv
 import kotlinx.android.synthetic.main.activity_main.avg_rate_tv
-import kotlinx.android.synthetic.main.activity_main.description_cv
 import kotlinx.android.synthetic.main.activity_main.description_tv
-import kotlinx.android.synthetic.main.activity_main.desserts_content_tv
 import kotlinx.android.synthetic.main.activity_main.full_screen_progress
-import kotlinx.android.synthetic.main.activity_main.location_cv
-import kotlinx.android.synthetic.main.activity_main.location_group
-import kotlinx.android.synthetic.main.activity_main.mains_content_tv
-import kotlinx.android.synthetic.main.activity_main.menu_cv
-import kotlinx.android.synthetic.main.activity_main.menu_group
+import kotlinx.android.synthetic.main.activity_main.menu_elements_ll
 import kotlinx.android.synthetic.main.activity_main.phone_tv
 import kotlinx.android.synthetic.main.activity_main.rate_distinction_tv
 import kotlinx.android.synthetic.main.activity_main.rating_ll
-import kotlinx.android.synthetic.main.activity_main.rating_tv
 import kotlinx.android.synthetic.main.activity_main.restaurant_image_iv
 import kotlinx.android.synthetic.main.activity_main.restaurant_name_tv
 import kotlinx.android.synthetic.main.activity_main.scroll_view_content
 import kotlinx.android.synthetic.main.activity_main.specialty_tv
-import kotlinx.android.synthetic.main.activity_main.starters_content_tv
 import kotlinx.android.synthetic.main.activity_main.total_reviews_tv
 import kotlinx.android.synthetic.main.activity_main.total_ta_review_tv
+import kotlinx.android.synthetic.main.menu_item.view.menu_item
+import kotlinx.android.synthetic.main.menu_item.view.menu_price
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -50,9 +48,6 @@ class RestaurantPageActivity : AppCompatActivity() {
 
         loadRestaurantData()
         hideToolbar()
-        setCollapsingDescription()
-        setCollapsingLocation()
-        setCollapsingMenu()
     }
 
     private fun loadRestaurantData() {
@@ -91,60 +86,36 @@ class RestaurantPageActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    private fun setCollapsingMenu() {
-        menu_cv.setOnClickListener {
-            menu_group.visibility =
-                if (menu_group.visibility == View.GONE) View.VISIBLE else View.GONE
-        }
-    }
-
-    private fun setCollapsingLocation() {
-        location_cv.setOnClickListener {
-            location_group.visibility =
-                if (location_group.visibility == View.GONE) View.VISIBLE else View.GONE
-        }
-    }
-
-    private fun setCollapsingDescription() {
-        description_cv.setOnClickListener {
-            description_tv.visibility =
-                if (description_tv.visibility == View.GONE) View.VISIBLE else View.GONE
-        }
-    }
-
-    private fun loadData(data: RestaurantModels) {
+    private fun loadData(data: Restaurant) {
         setLoadedState()
-        Picasso.get().load(data.data.picsMain.large).centerCrop().fit().into(restaurant_image_iv)
-        restaurant_name_tv.text = data.data.name
-        specialty_tv.text = data.data.speciality
-        actual_rating_tv.text = viewModel.getRating(data.data.ratings)
+        Picasso.get().load(data.mainPic).centerCrop().fit().into(restaurant_image_iv)
+        restaurant_name_tv.text = data.name
+        specialty_tv.text = data.speciality
+        actual_rating_tv.text = data.avgRate
         accepts_yums_tv.text =
-            if (viewModel.acceptsYums(data.data.yumsDetail)) {
+            if (data.isYums) {
                 getString(R.string.accepts_yums, getString(R.string.accepts))
             } else {
                 getString(R.string.accepts_yums, getString(R.string.does_not_accepts))
             }
-        description_tv.text = data.data.description
-        address_line_1_tv.text = viewModel.parseAddressLine1(data.data)
-        address_line_2_tv.text = viewModel.parseAddressLine2(data.data)
-        phone_tv.text = data.data.phone
-        starters_content_tv.text = viewModel.parseStarters(
-            data.data.cardStart1,
-            data.data.cardStart2,
-            data.data.cardStart3
-        )
-        mains_content_tv.text =
-            viewModel.parseMains(data.data.cardMain1, data.data.cardMain2, data.data.cardMain3)
-        desserts_content_tv.text = viewModel.parseDesserts(
-            data.data.cardDessert1,
-            data.data.cardDessert2,
-            data.data.cardDessert3
-        )
-        avg_rate_tv.text = data.data.avgRate.toString()
-        rate_distinction_tv.text = data.data.rateDistinction
-        total_reviews_tv.text = getString(R.string.based_on_x_reviews, data.data.rateCount)
+        description_tv.text = data.description
+        address_line_1_tv.text = data.addressLine1
+        address_line_2_tv.text = data.addressLine2
+        phone_tv.text = data.phone
+
+        for (item in data.menu) {
+            val menuView: ConstraintLayout =
+                LayoutInflater.from(this).inflate(R.layout.menu_item, null) as ConstraintLayout
+            menuView.menu_item.text = item.title
+            menuView.menu_price.text = item.price.toFormattedEuro()
+            menu_elements_ll.addView(menuView)
+        }
+
+        avg_rate_tv.text = data.avgRate
+        rate_distinction_tv.text = data.rateDistinction
+        total_reviews_tv.text = getString(R.string.based_on_x_reviews, data.rateCount)
         total_ta_review_tv.text =
-            getString(R.string.number_reviews, data.data.tripAdvisorReviewCount)
+            getString(R.string.number_reviews, data.tripAdvisorReviewCount)
         loadTripAdvisorRatings(3.50f)
     }
 

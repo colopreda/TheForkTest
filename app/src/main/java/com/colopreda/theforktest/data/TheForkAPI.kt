@@ -10,6 +10,6 @@ interface TheForkAPI {
     suspend fun getRestaurantData(
         @Query("key") apiKey: String = BuildConfig.API_KEY,
         @Query("method") method: String = "restaurant_get_info",
-        @Query("id_restaurant") restaurantId: String = "6861"
+        @Query("id_restaurant") restaurantId: String = "1884"
     ): RestaurantModels
 }
