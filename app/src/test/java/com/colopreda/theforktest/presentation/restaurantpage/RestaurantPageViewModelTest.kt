@@ -1,27 +1,30 @@
 package com.colopreda.theforktest.presentation.restaurantpage
 
-import com.colopreda.theforktest.data.Ratings
+import app.cash.turbine.test
+import com.colopreda.theforktest.data.RestaurantModels
 import com.colopreda.theforktest.data.RestaurantModelsData
-import com.colopreda.theforktest.data.YumsDetail
 import com.colopreda.theforktest.domain.GetRestaurantUseCase
+import com.colopreda.theforktest.presentation.State
+import com.colopreda.theforktest.utils.MainCoroutineScopeRule
+import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class RestaurantPageViewModelTest {
 
     private lateinit var viewModel: RestaurantPageViewModel
 
-    private val getRestaurantUseCase = GetRestaurantUseCase(mockk())
+    private val getRestaurantUseCase : GetRestaurantUseCase = mockk()
 
-    private fun getMockRestaurantData(): RestaurantModelsData {
-        return RestaurantModelsData(
-            address = "123 fake address",
-            city = "fake city",
-            country = "fake country"
-        )
-    }
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    var coroutineScope = MainCoroutineScopeRule()
 
     @Before
     fun setup() {
@@ -29,56 +32,30 @@ class RestaurantPageViewModelTest {
     }
 
     @Test
-    fun checkRatingOk() {
-        val rating = Ratings(91,91,91,91,90,88,70)
-        assertEquals(viewModel.getRating(rating), "9.1")
+    fun `flow emits success`() = runBlocking {
+        val mockResponse = RestaurantModels(RestaurantModelsData())
+        val mockRestaurant = mockResponse.data.toRestaurant()
+        coEvery { getRestaurantUseCase() } returns flow {
+            emit(mockRestaurant)
+        }
+
+        viewModel.getRestaurant()
+
+        viewModel.uiState.test {
+            assertEquals(awaitItem(), State.DataState(mockRestaurant))
+        }
     }
 
     @Test
-    fun testAcceptsYums() {
-        val isYums = YumsDetail(true, 15)
-        assertEquals(viewModel.acceptsYums(isYums), true)
+    fun `flow emits failure`() = runBlocking {
+        val runtimeException = RuntimeException()
+        coEvery { getRestaurantUseCase() } returns flow { throw runtimeException }
+
+        viewModel.getRestaurant()
+
+        viewModel.uiState.test {
+            assertEquals(awaitItem(), State.ErrorState(runtimeException))
+        }
     }
 
-    @Test
-    fun testDoesNotAcceptYums() {
-        val isYums = YumsDetail(false, 15)
-        assertEquals(viewModel.acceptsYums(isYums), false)
-    }
-
-    @Test
-    fun testParseAddressLine1() {
-        val restaurantModelsData = getMockRestaurantData()
-        assertEquals(viewModel.parseAddressLine1(restaurantModelsData), "123 fake address")
-    }
-
-    @Test
-    fun testParseAddressLine2() {
-        val restaurantModelsData = getMockRestaurantData()
-        assertEquals(viewModel.parseAddressLine2(restaurantModelsData), "fake city, fake country")
-    }
-
-    @Test
-    fun testParseStarters() {
-        val starter1 = "starter1"
-        val starter2 = "starter2"
-        val starter3 = "starter3"
-        assertEquals(viewModel.parseStarters(starter1, starter2, starter3), "- starter1 \n- starter2 \n- starter3")
-    }
-
-    @Test
-    fun testParseMains() {
-        val main1 = "main1"
-        val main2 = "main2"
-        val main3 = "main3"
-        assertEquals(viewModel.parseStarters(main1, main2, main3), "- main1 \n- main2 \n- main3")
-    }
-
-    @Test
-    fun testParseDesserts() {
-        val dessert1 = "dessert1"
-        val dessert2 = "dessert2"
-        val dessert3 = "dessert3"
-        assertEquals(viewModel.parseStarters(dessert1, dessert2, dessert3), "- dessert1 \n- dessert2 \n- dessert3")
-    }
 }

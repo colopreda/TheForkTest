@@ -48,24 +48,39 @@ class RestaurantPageActivity : AppCompatActivity() {
 
         loadRestaurantData()
         hideToolbar()
+        suscribeUiState()
     }
 
-    private fun loadRestaurantData() {
-        lifecycleScope.launch {
-            viewModel.getRestaurantResponse().collect { restaurantModelsState ->
-                when (restaurantModelsState) {
-                    is State.DataState -> loadData(restaurantModelsState.data)
-                    is State.LoadingState -> setLoadingState()
-                    is State.ErrorState -> showErrorSnackbar()
-
+    private fun suscribeUiState() {
+        lifecycleScope.launchWhenStarted {
+            viewModel.uiState.collect { actualState ->
+                when (actualState) {
+                    is State.LoadingState -> {setLoadingState()}
+                    is State.ErrorState -> {showErrorSnackbar()}
+                    is State.DataState -> {loadData(actualState.data)}
                 }
             }
         }
     }
 
+    private fun loadRestaurantData() {
+        viewModel.getRestaurant()
+
+//                .collect { restaurantModelsState ->
+//                when (restaurantModelsState) {
+//                    is State.DataState -> loadData(restaurantModelsState.data)
+//                    is State.LoadingState -> setLoadingState()
+//                    is State.ErrorState -> showErrorSnackbar()
+//
+//                }
+//            }
+    }
+
     private fun showErrorSnackbar() {
-        val mySnackbar = Snackbar.make(findViewById(R.id.scroll_view_content),
-            R.string.there_was_an_error, Snackbar.LENGTH_INDEFINITE)
+        val mySnackbar = Snackbar.make(
+            findViewById(R.id.scroll_view_content),
+            R.string.there_was_an_error, Snackbar.LENGTH_INDEFINITE
+        )
         mySnackbar.setAction(R.string.retry) {
             loadRestaurantData()
         }
@@ -155,7 +170,7 @@ class RestaurantPageActivity : AppCompatActivity() {
                 )
             }
         }
-        for (j in tripAdvisorAvgRating.toInt()+1 until 5) {
+        for (j in tripAdvisorAvgRating.toInt() + 1 until 5) {
             // Add empty circles
             rating_ll.addView(
                 ImageView(applicationContext).apply {

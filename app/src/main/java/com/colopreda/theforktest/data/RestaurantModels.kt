@@ -42,23 +42,23 @@ data class RestaurantModelsData(
     @SerializedName("card_dessert_3")
     val cardDessert3: String = "",
     @SerializedName("price_card_start_1")
-    val priceCardStart1: Float?,
+    val priceCardStart1: Float? = 0.0f,
     @SerializedName("price_card_start_2")
-    val priceCardStart2: Float?,
+    val priceCardStart2: Float? = 0.0f,
     @SerializedName("price_card_start_3")
-    val priceCardStart3: Float?,
+    val priceCardStart3: Float? = 0.0f,
     @SerializedName("price_card_main_1")
-    val priceCardMain1: Float?,
+    val priceCardMain1: Float? = 0.0f,
     @SerializedName("price_card_main_2")
-    val priceCardMain2: Float?,
+    val priceCardMain2: Float? = 0.0f,
     @SerializedName("price_card_main_3")
-    val priceCardMain3: Float?,
+    val priceCardMain3: Float? = 0.0f,
     @SerializedName("price_card_dessert_1")
-    val priceCardDessert1: Float?,
+    val priceCardDessert1: Float? = 0.0f,
     @SerializedName("price_card_dessert_2")
-    val priceCardDessert2: Float?,
+    val priceCardDessert2: Float? = 0.0f,
     @SerializedName("price_card_dessert_3")
-    val priceCardDessert3: Float?,
+    val priceCardDessert3: Float? = 0.0f,
     val tripAdvisorAvgRating: Float = 0.0f,
     val tripAdvisorReviewCount: Int = 0
 ) {

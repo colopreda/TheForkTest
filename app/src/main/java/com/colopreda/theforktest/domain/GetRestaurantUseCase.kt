@@ -1,14 +1,13 @@
 package com.colopreda.theforktest.domain
 
-import com.colopreda.theforktest.data.RestaurantModels
-import com.colopreda.theforktest.data.TheForkAPI
-import com.google.gson.JsonObject
+import com.colopreda.theforktest.presentation.restaurantpage.RestaurantPageRepository
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
 class GetRestaurantUseCase @Inject constructor(
-    private val theForkAPI: TheForkAPI
+    private val repository: RestaurantPageRepository
 ) {
-    suspend operator fun invoke(): Restaurant {
-        return theForkAPI.getRestaurantData().data.toRestaurant()
+    suspend operator fun invoke(): Flow<Restaurant> {
+        return repository.getRestaurantData()
     }
 }
